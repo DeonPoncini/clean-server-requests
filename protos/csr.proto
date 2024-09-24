@@ -14,7 +14,13 @@ service Clean {
 }
 
 message HostInfo {
-    string name = 1;
+    SessionType type = 1;
+}
+
+enum SessionType {
+    TYPE_UNSPECIFIED = 0;
+    DICE = 1;
+    COIN = 2;
 }
 
 message Sessions {
@@ -23,7 +29,7 @@ message Sessions {
 
 message SessionData {
     uint64 session_id = 1;
-    string session_name = 2;
+    SessionType type = 2;
     repeated string users = 3;
 }
 
@@ -44,17 +50,19 @@ message ServerRequest {
     oneof msg {
         JoinInfo user_joined = 1;
         Ping ping = 2;
-        AskGuess guess = 3;
-        Winner winner = 4;
-        bool try_again = 5;
+        RollDice dice = 3;
+        FlipCoin coin = 4;
+        Winner winner = 5;
+        bool try_again = 6;
     }
 }
 
 message ClientResponse {
     oneof msg {
         Pong pong = 1;
-        Guess guess = 2;
-        bool again = 3;
+        DiceGuess dice_guess = 2;
+        CoinGuess coin_guess = 3;
+        bool again = 4;
     }
 }
 
@@ -66,13 +74,27 @@ message Pong {
     string text = 1;
 }
 
-message AskGuess {
-    uint32 lower = 1;
-    uint32 higher = 2;
+message RollDice {
+    uint32 sides = 1;
+    uint32 count = 2;
 }
 
-message Guess {
-    uint32 number = 1;
+message FlipCoin {
+    uint32 count = 1;
+}
+
+message DiceGuess {
+    repeated uint32 number = 1;
+}
+
+message CoinGuess {
+    repeated Coin coins = 1;
+}
+
+enum Coin {
+    COIN_UNSPECIFIED = 0;
+    COIN_HEADS = 1;
+    COIN_TAILS = 2;
 }
 
 message Winner {
