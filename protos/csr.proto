@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package clean;
+
+service Clean {
+    // client initiated API
+    rpc HostSession(HostInfo) returns (SessionData);
+    rpc ListSessions(Empty) returns (Sessions);
+    rpc JoinSession(JoinInfo) returns (Empty);
+
+    // server initiated API
+    rpc ServerEvents(EventRegister) returns (stream ServerRequest);
+    rpc RespondToServerEvent(ClientResponse) returns (Empty);
+}
+
+message HostInfo {
+    string name = 1;
+}
+
+message Sessions {
+    repeated SessionData data = 1;
+}
+
+message SessionData {
+    uint64 session_id = 1;
+    string session_name = 2;
+    repeated string users = 3;
+}
+
+message JoinInfo {
+    uint64 session_id = 1;
+    uint64 user_id = 2;
+    string user_name = 3;
+}
+
+message Empty {}
+
+message EventRegister {
+    uint64 session_id = 1;
+    uint64 user_id = 2;
+}
+
+message ServerRequest {
+    oneof msg {
+        JoinInfo user_joined = 1;
+        Ping ping = 2;
+        AskGuess guess = 3;
+        Winner winner = 4;
+        bool try_again = 5;
+    }
+}
+
+message ClientResponse {
+    oneof msg {
+        Pong pong = 1;
+        Guess guess = 2;
+        bool again = 3;
+    }
+}
+
+message Ping {
+    string text = 1;
+}
+
+message Pong {
+    string text = 1;
+}
+
+message AskGuess {
+    uint32 lower = 1;
+    uint32 higher = 2;
+}
+
+message Guess {
+    uint32 number = 1;
+}
+
+message Winner {
+    uint64 user_id = 1;
+    string user_name = 2;
+}

@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "csr-client",
+    "csr-protocol",
+    "csr-server",
+]
