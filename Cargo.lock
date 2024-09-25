@@ -195,10 +195,12 @@ version = "0.1.0"
 name = "csr-protocol"
 version = "0.1.0"
 dependencies = [
+ "log",
  "prost",
  "protobuf-src",
  "thiserror",
  "tokio",
+ "tokio-stream",
  "tonic",
  "tonic-build",
  "tonic-web",

@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+log = "0.4"
 prost = "0.13"
 thiserror = "1.0"
 tonic = { version = "0.12", features=["transport"] }
 tonic-web = "0.12"
 tokio = { version = "1", features=["full"] }
+tokio-stream = { version = "0.1" }
 
 [build-dependencies]
 protobuf-src = "2.1"

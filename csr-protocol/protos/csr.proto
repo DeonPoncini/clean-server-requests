@@ -10,7 +10,7 @@ service Clean {
 
     // server initiated API
     rpc ServerEvents(EventRegister) returns (stream ServerRequest);
-    rpc RespondToServerEvent(ClientResponse) returns (Empty);
+    rpc RespondToServerEvent(ClientEventResponse) returns (Empty);
 }
 
 message HostInfo {
@@ -64,6 +64,11 @@ message ClientResponse {
         CoinGuess coin_guess = 3;
         bool again = 4;
     }
+}
+
+message ClientEventResponse {
+    EventRegister er = 1;
+    ClientResponse client_response = 2;
 }
 
 message Ping {
