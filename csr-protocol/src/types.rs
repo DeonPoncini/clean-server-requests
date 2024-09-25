@@ -221,6 +221,7 @@ impl From<JoinInfo> for clean::JoinInfo {
     }
 }
 
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct EventRegister {
     sid: SessionID,
     uid: UserID,
