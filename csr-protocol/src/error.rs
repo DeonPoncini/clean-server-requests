@@ -4,4 +4,8 @@ pub enum Error {
     InvalidSessionType,
     #[error("Invalid coin value")]
     InvalidCoinValue,
+    #[error("Invalid server request")]
+    InvalidServerRequest,
+    #[error("Invalid client response")]
+    InvalidClientResponse,
 }
