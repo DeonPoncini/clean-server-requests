@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::sync::Arc;
 
 use tonic::{Request, Response, Status};
@@ -9,6 +8,7 @@ use tokio_stream::wrappers::ReceiverStream;
 
 use crate::clean;
 use crate::event::ServerEventSender;
+use crate::types::Result;
 use crate::types::{
     ClientResponse, EventRegister, HostInfo, JoinInfo, SessionData, SessionID,
     SessionType, UserID,
@@ -37,20 +37,20 @@ impl CleanServer {
 #[tonic::async_trait]
 pub trait Clean: Send + Sync + 'static {
     // client initiated API
-    async fn host_session(&self, typ: SessionType) -> Result<SessionData, Box<dyn Error>>;
-    async fn list_sessions(&self) -> Result<Vec<SessionData>, Box<dyn Error>>;
+    async fn host_session(&self, typ: SessionType) -> Result<SessionData>;
+    async fn list_sessions(&self) -> Result<Vec<SessionData>>;
     async fn join_session(&self, sid: SessionID, uid: UserID, user_name: &str)
-        -> Result<(), Box<dyn Error>>;
+        -> Result<()>;
     // server callbacks
     async fn register_server_event_sender(&self, sid: SessionID, uid: UserID,
-                          s: ServerEventSender) -> Result<(), Box<dyn Error>>;
+                          s: ServerEventSender) -> Result<()>;
 }
 
 #[tonic::async_trait]
 impl clean::clean_server::Clean for CleanServer {
     // client initiated API
     async fn host_session(&self, request: Request<clean::HostInfo>)
-            -> Result<Response<clean::SessionData>, Status> {
+            -> std::result::Result<Response<clean::SessionData>, Status> {
         let hi: HostInfo = request.into_inner().try_into()
             .map_err(|e| Status::internal(&format!("{}", e)))?;
         let c = self.server.host_session(hi.session_type()).await
@@ -59,7 +59,7 @@ impl clean::clean_server::Clean for CleanServer {
         Ok(Response::new(reply))
     }
     async fn list_sessions(&self, _: Request<clean::Empty>)
-            -> Result<Response<clean::Sessions>, Status> {
+            -> std::result::Result<Response<clean::Sessions>, Status> {
         let c = self.server.list_sessions().await
             .map_err(|e| Status::internal(&format!("{}", e)))?;
         let v: Vec<clean::SessionData> = c.iter().map(|sd| sd.clone().into()).collect();
@@ -70,16 +70,16 @@ impl clean::clean_server::Clean for CleanServer {
         ))
     }
     async fn join_session(&self, request: Request<clean::JoinInfo>)
-            -> Result<Response<clean::Empty>, Status> {
+            -> std::result::Result<Response<clean::Empty>, Status> {
         let ji: JoinInfo = request.into_inner().into();
         self.server.join_session(ji.session_id(), ji.user_id(), ji.user_name()).await
             .map_err(|e| Status::internal(&format!("{}", e)))?;
         Ok(Response::new(clean::Empty{}))
     }
     // server callbacks
-    type ServerEventsStream = ReceiverStream<Result<clean::ServerRequest, Status>>;
+    type ServerEventsStream = ReceiverStream<std::result::Result<clean::ServerRequest, Status>>;
     async fn server_events(&self, request: Request<clean::EventRegister>)
-            -> Result<Response<Self::ServerEventsStream>, Status> {
+            -> std::result::Result<Response<Self::ServerEventsStream>, Status> {
         // outer channel to return message to the client
         let (tx, rx) = mpsc::channel(100);
 
@@ -118,7 +118,7 @@ impl clean::clean_server::Clean for CleanServer {
     }
 
     async fn respond_to_server_event(&self, request: Request<clean::ClientEventResponse>)
-            -> Result<Response<clean::Empty>, Status> {
+            -> std::result::Result<Response<clean::Empty>, Status> {
         let inner = request.into_inner();
         let er = inner.er
             .ok_or_else(|| Status::internal("Invalid response"))?.into();

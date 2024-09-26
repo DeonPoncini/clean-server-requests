@@ -1,3 +1,5 @@
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
+
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SessionID(pub u64);
 
@@ -18,7 +20,7 @@ pub enum SessionType {
 impl TryFrom<i32> for SessionType {
     type Error = Error;
 
-    fn try_from(proto: i32) -> Result<Self, Self::Error> {
+    fn try_from(proto: i32) -> std::result::Result<Self, Self::Error> {
         if proto == clean::SessionType::Dice as i32 {
             return Ok(SessionType::Dice);
         } else if proto == clean::SessionType::Coin as i32 {
@@ -48,7 +50,7 @@ pub enum Coin {
 impl TryFrom<i32> for Coin {
     type Error = Error;
 
-    fn try_from(proto: i32) -> Result<Self, Self::Error> {
+    fn try_from(proto: i32) -> std::result::Result<Self, Self::Error> {
         if proto == clean::Coin::Heads as i32 {
             return Ok(Coin::Heads);
         } else if proto == clean::Coin::Tails as i32 {
@@ -85,7 +87,7 @@ impl HostInfo {
 impl TryFrom<clean::HostInfo> for HostInfo {
     type Error = Error;
 
-    fn try_from(proto: clean::HostInfo) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::HostInfo) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
             typ: proto.r#type.try_into()?,
         })
@@ -125,7 +127,7 @@ impl SessionData {
 impl TryFrom<clean::SessionData> for SessionData {
     type Error = Error;
 
-    fn try_from(proto: clean::SessionData) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::SessionData) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
             sid: SessionID(proto.session_id),
             typ: proto.r#type.try_into()?,
@@ -162,7 +164,7 @@ impl Sessions {
 impl TryFrom<clean::Sessions> for Sessions {
     type Error = Error;
 
-    fn try_from(proto: clean::Sessions) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::Sessions) -> std::result::Result<Self, Self::Error> {
         let mut data = Vec::new();
         for d in proto.data {
             data.push(d.try_into()?);
@@ -429,7 +431,7 @@ impl CoinGuess {
 impl TryFrom<clean::CoinGuess> for CoinGuess {
     type Error = Error;
 
-    fn try_from(proto: clean::CoinGuess) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::CoinGuess) -> std::result::Result<Self, Self::Error> {
         let mut coins = Vec::new();
         for coin in proto.coins {
             coins.push(coin.try_into()?);
@@ -498,7 +500,7 @@ pub enum ServerRequest {
 impl TryFrom<clean::ServerRequest> for ServerRequest {
     type Error = Error;
 
-    fn try_from(proto: clean::ServerRequest) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::ServerRequest) -> std::result::Result<Self, Self::Error> {
         let msg = proto.msg.ok_or_else(|| Error::InvalidServerRequest)?;
         match msg {
             clean::server_request::Msg::UserJoined(ji) =>
@@ -544,12 +546,13 @@ pub enum ClientResponse {
     DiceGuess(DiceGuess),
     CoinGuess(CoinGuess),
     Again(bool),
+    ClientError(String),
 }
 
 impl TryFrom<clean::ClientResponse> for ClientResponse {
     type Error = Error;
 
-    fn try_from(proto: clean::ClientResponse) -> Result<Self, Self::Error> {
+    fn try_from(proto: clean::ClientResponse) -> std::result::Result<Self, Self::Error> {
         let msg = proto.msg.ok_or_else(|| Error::InvalidClientResponse)?;
         match msg {
             clean::client_response::Msg::Pong(p) =>
@@ -560,6 +563,8 @@ impl TryFrom<clean::ClientResponse> for ClientResponse {
                 return Ok(ClientResponse::CoinGuess(cg.try_into()?)),
             clean::client_response::Msg::Again(a) =>
                 return Ok(ClientResponse::Again(a)),
+            clean::client_response::Msg::Error(e) =>
+                return Ok(ClientResponse::ClientError(e)),
         }
     }
 }
@@ -575,6 +580,8 @@ impl From<ClientResponse> for clean::ClientResponse {
                 clean::client_response::Msg::CoinGuess(cg.into()),
             ClientResponse::Again(a) =>
                 clean::client_response::Msg::Again(a),
+            ClientResponse::ClientError(a) =>
+                clean::client_response::Msg::Error(a),
         };
         Self {
             msg: Some(msg),

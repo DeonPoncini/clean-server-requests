@@ -63,6 +63,7 @@ message ClientResponse {
         DiceGuess dice_guess = 2;
         CoinGuess coin_guess = 3;
         bool again = 4;
+        string error = 5;
     }
 }
 
