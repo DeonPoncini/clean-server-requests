@@ -72,16 +72,19 @@ impl From<Coin> for clean::Coin {
 
 pub struct HostInfo {
     typ: SessionType,
+    player_count: u8,
 }
 
 impl HostInfo {
-    pub fn new(typ: SessionType) -> Self {
+    pub fn new(typ: SessionType, player_count: u8) -> Self {
         Self {
-            typ: typ
+            typ: typ,
+            player_count: player_count,
         }
     }
 
     pub fn session_type(&self) -> SessionType { self.typ }
+    pub fn player_count(&self) -> u8 { self.player_count }
 }
 
 impl TryFrom<clean::HostInfo> for HostInfo {
@@ -90,6 +93,7 @@ impl TryFrom<clean::HostInfo> for HostInfo {
     fn try_from(proto: clean::HostInfo) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
             typ: proto.r#type.try_into()?,
+            player_count: proto.player_count as u8,
         })
     }
 }
@@ -99,6 +103,7 @@ impl From<HostInfo> for clean::HostInfo {
         let t: clean::SessionType = hi.typ.into();
         Self {
             r#type: t.into(),
+            player_count: hi.player_count as u32,
         }
     }
 }

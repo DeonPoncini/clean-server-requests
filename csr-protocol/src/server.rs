@@ -37,7 +37,7 @@ impl CleanServer {
 #[tonic::async_trait]
 pub trait Clean: Send + Sync + 'static {
     // client initiated API
-    async fn host_session(&self, typ: SessionType) -> Result<SessionData>;
+    async fn host_session(&self, typ: SessionType, player_count: u8) -> Result<SessionData>;
     async fn list_sessions(&self) -> Result<Vec<SessionData>>;
     async fn join_session(&self, sid: SessionID, uid: UserID, user_name: &str)
         -> Result<()>;
@@ -53,7 +53,7 @@ impl clean::clean_server::Clean for CleanServer {
             -> std::result::Result<Response<clean::SessionData>, Status> {
         let hi: HostInfo = request.into_inner().try_into()
             .map_err(|e| Status::internal(&format!("{}", e)))?;
-        let c = self.server.host_session(hi.session_type()).await
+        let c = self.server.host_session(hi.session_type(), hi.player_count()).await
             .map_err(|e| Status::internal(&format!("{}", e)))?;
         let reply = c.into();
         Ok(Response::new(reply))

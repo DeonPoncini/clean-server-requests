@@ -22,6 +22,7 @@ pub struct UserData {
 
 pub struct SessionState {
     pub sid: SessionID,
+    pub player_count: u8,
     pub users: HashMap<UserID, UserData>,
     pub session_type: SessionType,
 
@@ -64,13 +65,15 @@ impl CleanService {
 #[tonic::async_trait]
 impl Clean for CleanService {
     // client initiated API
-    async fn host_session(&self, typ: SessionType) -> Result<SessionData> {
+    async fn host_session(&self, typ: SessionType, player_count: u8)
+            -> Result<SessionData> {
         let sid = NEXT_SESSION_ID.fetch_add(1, Ordering::Relaxed);
         let session_id = SessionID(sid);
 
         // create state for a session
         let session = Arc::new(RwLock::new(SessionState {
             sid: session_id,
+            player_count: player_count,
             users: HashMap::new(),
             session_type: typ,
             server_event_senders: HashMap::new(),
@@ -107,6 +110,11 @@ impl Clean for CleanService {
             name: user_name.to_owned(),
         };
         s.write().await.users.insert(uid, ud);
+
+        // check if we have enough players to start the game
+        if s.read().await.users.len() as u8 == s.read().await.player_count {
+            info!("Game is starting for session {:?}", sid);
+        }
 
         Ok(())
     }

@@ -15,6 +15,7 @@ service Clean {
 
 message HostInfo {
     SessionType type = 1;
+    uint32 player_count = 2;
 }
 
 enum SessionType {

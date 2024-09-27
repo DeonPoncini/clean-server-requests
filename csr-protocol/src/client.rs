@@ -29,8 +29,9 @@ impl CleanClient {
     }
 
     // client drive API
-    pub async fn host_session(&mut self, typ: SessionType) -> Result<SessionData> {
-        let hi = HostInfo::new(typ);
+    pub async fn host_session(&mut self, typ: SessionType, player_count: u8)
+            -> Result<SessionData> {
+        let hi = HostInfo::new(typ, player_count);
         let request = Request::new(hi.into());
         let response = self.client.host_session(request).await?;
         Ok(response.into_inner().try_into()?)
