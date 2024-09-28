@@ -19,6 +19,7 @@ pub trait ServerEvent: Send + Sync + 'static {
     async fn flip_coin(&self, count: u8) -> Result<Vec<Coin>>;
     async fn winner(&self, uid: UserID, name: &str) -> Result<()>;
     async fn try_again(&self) -> Result<bool>;
+    async fn error(&self, err: &str) -> Result<()>;
 }
 
 pub struct ServerEventSender {
@@ -92,5 +93,8 @@ impl ServerEvent for ServerEventSender {
         } else {
             return Err(Error::InvalidClientResponse)?;
         }
+    }
+    async fn error(&self, err: &str) -> Result<()> {
+        Ok(self.tx.send(ServerRequest::ServerError(err.to_owned())).await?)
     }
 }

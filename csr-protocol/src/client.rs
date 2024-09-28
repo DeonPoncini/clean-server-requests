@@ -151,5 +151,9 @@ async fn server_listener_handler(server_el: Arc<dyn ServerEvent>,
             let r = server_el.try_again().await?;
             return Ok(Some(clean::client_response::Msg::Again(r)));
         }
+        clean::server_request::Msg::Error(e) => {
+            server_el.error(&e).await?;
+            return Ok(None);
+        }
     }
 }

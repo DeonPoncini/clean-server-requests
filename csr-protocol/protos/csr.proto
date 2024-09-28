@@ -55,6 +55,7 @@ message ServerRequest {
         FlipCoin coin = 4;
         Winner winner = 5;
         bool try_again = 6;
+        string error = 7;
     }
 }
 

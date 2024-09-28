@@ -500,6 +500,7 @@ pub enum ServerRequest {
     FlipCoin(FlipCoin),
     Winner(Winner),
     TryAgain(bool),
+    ServerError(String),
 }
 
 impl TryFrom<clean::ServerRequest> for ServerRequest {
@@ -520,6 +521,8 @@ impl TryFrom<clean::ServerRequest> for ServerRequest {
                 return Ok(ServerRequest::Winner(w.into())),
             clean::server_request::Msg::TryAgain(t) =>
                 return Ok(ServerRequest::TryAgain(t)),
+            clean::server_request::Msg::Error(e) =>
+                return Ok(ServerRequest::ServerError(e)),
         }
     }
 }
@@ -539,6 +542,8 @@ impl From<ServerRequest> for clean::ServerRequest {
                 clean::server_request::Msg::Winner(w.into()),
             ServerRequest::TryAgain(t) =>
                 clean::server_request::Msg::TryAgain(t.into()),
+            ServerRequest::ServerError(e) =>
+                clean::server_request::Msg::Error(e),
         };
         Self {
             msg: Some(msg),
