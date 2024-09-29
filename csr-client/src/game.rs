@@ -26,21 +26,42 @@ impl ServerEvent for Game {
         Ok(())
     }
     async fn ping(&self, ping: &str) -> Result<String> {
-        println!("Received ping message: {}", ping);
-        let reply = read_input("Reply to ping:")?;
-        Ok(reply)
+        info!("Received ping message: {}", ping);
+        Ok("pong".to_owned())
     }
     async fn roll_dice(&self, sides: u8, count: u8) -> Result<Vec<u8>> {
-        todo!()
+        let mut ret = Vec::new();
+        for x in 0..count {
+            let input = read_input(
+                &format!("Guess the value of die {} with {} sides:", x, sides))?;
+            let value: u8 = input.parse()?;
+            ret.push(value);
+        }
+        Ok(ret)
     }
     async fn flip_coin(&self, count: u8) -> Result<Vec<Coin>> {
-        todo!()
+        let mut ret = Vec::new();
+        for x in 0..count {
+            let input = read_input(
+                &format!("Guess coin flip {}, h or t", x))?;
+            if input == "h" {
+                ret.push(Coin::Heads);
+            } else {
+                ret.push(Coin::Tails);
+            }
+        }
+        Ok(ret)
     }
     async fn winner(&self, uid: UserID, name: &str) -> Result<()> {
-        todo!()
+        info!("Winner: [{}] {}", uid.0, name);
+        Ok(())
     }
     async fn try_again(&self) -> Result<bool> {
-        todo!()
+        let again = read_input("Try again? [y/n]")?;
+        if again == "y" {
+            return Ok(true);
+        }
+        Ok(false)
     }
     async fn error(&self, err: &str) -> Result<()> {
         error!("Server error found: {}", err);

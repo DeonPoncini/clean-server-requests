@@ -53,6 +53,8 @@ async fn main() -> Result<()> {
 
     // connect to the server
     let mut client = CleanClient::new(&cli.address).await?;
+    let mut handle = None;
+    let mut join_id = None;
 
     println!("Connected to server at {}", cli.address);
     println!("Type ? for help");
@@ -114,17 +116,28 @@ async fn main() -> Result<()> {
                 continue;
             }
             let session_id = SessionID(sid);
-            // start listening to the server events
-            let listener = Arc::new(Game::new());
-            let handle = client.server_events_listen(session_id, uid, listener).await?;
             // join the session
             client.join_session(session_id, uid, &username).await?;
 
-            // wait for the game to end
-            if let (Err(e),) = futures::try_join!(handle)? {
-                error!("Game exited with error {:?}", e);
+            // start listening to the server events
+            let listener = Arc::new(Game::new());
+            handle = Some(client.server_events_listen(session_id, uid, listener).await?);
+
+            join_id = Some(session_id);
+        } else if input == "s" {
+            let session_id;
+            match join_id {
+                Some(id) => session_id = id,
+                None => {
+                    println!("Join a session before starting the game");
+                    continue;
+                }
             }
-            println!("Game over");
+            // start the game
+            client.start_session(session_id).await?;
+
+            // break out to finalize the game
+            break;
         } else if input == "q" {
             break;
         } else if input == "?" {
@@ -132,6 +145,19 @@ async fn main() -> Result<()> {
         } else {
             println!("Unknown input: {}", input);
             print_help();
+        }
+    }
+
+    match handle {
+        Some(h) => {
+            // wait for the game to end
+            if let (Err(e),) = futures::try_join!(h)? {
+                error!("Game exited with error {:?}", e);
+            }
+            println!("Game over");
+        }
+        None => {
+            error!("No listener handle to wait on");
         }
     }
 
@@ -143,6 +169,7 @@ fn print_help() {
     println!("h\thost a session");
     println!("l\tlist sessions");
     println!("j\tjoin a session");
+    println!("s\tstart current session");
     println!("q\tquit");
     println!("?\tprint this menu");
 }

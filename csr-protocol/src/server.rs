@@ -11,7 +11,7 @@ use crate::event::ServerEventSender;
 use crate::types::Result;
 use crate::types::{
     ClientResponse, EventRegister, HostInfo, JoinInfo, SessionData, SessionID,
-    SessionType, UserID,
+    SessionType, StartInfo, UserID,
 };
 
 pub fn make_server(server: impl Clean)
@@ -41,6 +41,7 @@ pub trait Clean: Send + Sync + 'static {
     async fn list_sessions(&self) -> Result<Vec<SessionData>>;
     async fn join_session(&self, sid: SessionID, uid: UserID, user_name: &str)
         -> Result<()>;
+    async fn start_session(&self, sid: SessionID) -> Result<()>;
     // server callbacks
     async fn register_server_event_sender(&self, sid: SessionID, uid: UserID,
                           s: ServerEventSender) -> Result<()>;
@@ -73,6 +74,13 @@ impl clean::clean_server::Clean for CleanServer {
             -> std::result::Result<Response<clean::Empty>, Status> {
         let ji: JoinInfo = request.into_inner().into();
         self.server.join_session(ji.session_id(), ji.user_id(), ji.user_name()).await
+            .map_err(|e| Status::internal(&format!("{}", e)))?;
+        Ok(Response::new(clean::Empty{}))
+    }
+    async fn start_session(&self, request: Request<clean::StartInfo>)
+            -> std::result::Result<Response<clean::Empty>, Status> {
+        let si: StartInfo = request.into_inner().into();
+        self.server.start_session(si.session_id()).await
             .map_err(|e| Status::internal(&format!("{}", e)))?;
         Ok(Response::new(clean::Empty{}))
     }

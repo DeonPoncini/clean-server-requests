@@ -228,6 +228,36 @@ impl From<JoinInfo> for clean::JoinInfo {
     }
 }
 
+pub struct StartInfo {
+    sid: SessionID,
+}
+
+impl StartInfo {
+    pub fn new(sid: SessionID) -> Self {
+        Self {
+            sid: sid,
+        }
+    }
+
+    pub fn session_id(&self) -> SessionID { self.sid }
+}
+
+impl From<clean::StartInfo> for StartInfo {
+    fn from(proto: clean::StartInfo) -> Self {
+        Self {
+            sid: SessionID(proto.session_id),
+        }
+    }
+}
+
+impl From<StartInfo> for clean::StartInfo {
+    fn from(si: StartInfo) -> Self {
+        Self {
+            session_id: si.sid.0,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct EventRegister {
     sid: SessionID,

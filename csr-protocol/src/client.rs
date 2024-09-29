@@ -12,7 +12,7 @@ use crate::event::ServerEvent;
 use crate::types::Result;
 use crate::types::{
     CoinGuess, DiceGuess, EventRegister, FlipCoin, JoinInfo, HostInfo, Ping, Pong,
-    RollDice, Sessions, SessionData, SessionID, SessionType, UserID, Winner,
+    RollDice, Sessions, SessionData, SessionID, SessionType, StartInfo, UserID, Winner,
 };
 
 pub struct CleanClient {
@@ -49,6 +49,13 @@ impl CleanClient {
         let ji = JoinInfo::new(sid, uid, user_name);
         let request = Request::new(ji.into());
         let _ = self.client.join_session(request).await?;
+        Ok(())
+    }
+
+    pub async fn start_session(&mut self, sid: SessionID) -> Result<()> {
+        let si = StartInfo::new(sid);
+        let request = Request::new(si.into());
+        let _ = self.client.start_session(request).await?;
         Ok(())
     }
 

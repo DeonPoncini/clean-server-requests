@@ -127,6 +127,10 @@ impl Clean for CleanService {
         };
         s.write().await.users.insert(uid, ud);
 
+        Ok(())
+    }
+    async fn start_session(&self, sid: SessionID) -> Result<()> {
+        let s = self.get_session(sid).await?;
         // check if we have enough players to start the game
         if s.read().await.users.len() as u8 == s.read().await.player_count {
             info!("Game is starting for session {:?}", sid);
